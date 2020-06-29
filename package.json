@@ -1,0 +1,13 @@
+{
+  "name": "ssr",
+  "version": "1.0.0",
+  "description": "Render a DOM-based JS script (ESM) and serialize",
+  "main": "render.js",
+  "type": "module",
+  "scripts": {
+    "build": "node --unhandled-rejections=strict --experimental-loader ./web-root-loader.mjs render.js"
+  },
+  "keywords": [],
+  "author": "Gen Hames",
+  "license": "MIT"
+}
