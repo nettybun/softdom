@@ -299,6 +299,8 @@ function initializeAttributeAccessors(instance, nodeName) {
 
 // -----------------------------------------------------------------------------
 
+// TODO: Extend window with fetch()/AbortController
+
 const window = {
   Document,
   DocumentFragment,
