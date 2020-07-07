@@ -106,6 +106,7 @@ document.documentElement.appendChild(document.body);
   // FIXME: Observables aren't updating DOM; api.insert not liking SoftDOM?
   await new Promise((resolve) => setTimeout(resolve, 500));
   server.close();
+  console.log('Koa server stopped');
 
   console.time('Serialize');
   const serialized = xmlFormat(document.body.innerHTML, {
