@@ -1,12 +1,13 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-// Support resources "server side"
+// For "server side"
 // If you have a full backend server written, turn it on here instead
 import Koa from 'koa';
 import send from 'koa-send';
 
-// Support fetch() "client side"
+// For "client side"
+import { trace } from 'sinuous-trace';
 import fetch from 'node-fetch';
 import AbortController from 'abort-controller';
 
@@ -107,6 +108,10 @@ document.documentElement.appendChild(document.body);
   await new Promise((resolve) => setTimeout(resolve, 500));
   server.close();
   console.log('Koa server stopped');
+
+  // Pull out SSR observables
+  // ... ugh trace.meta isn't iterable
+  // ... maybe the best way is to tap into api.insert/api.property?
 
   console.time('Serialize');
   const serialized = xmlFormat(document.body.innerHTML, {
