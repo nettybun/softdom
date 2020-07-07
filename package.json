@@ -12,6 +12,9 @@
   "license": "MIT",
   "dependencies": {
     "abort-controller": "^3.0.0",
-    "node-fetch": "^2.6.0"
+    "koa": "^2.13.0",
+    "koa-send": "^5.0.0",
+    "node-fetch": "^2.6.0",
+    "xml-formatter": "^2.1.2"
   }
 }

@@ -5,6 +5,7 @@
 // - DocumentFragment doesn't handle moving children properly on insertBefore
 // - Setting attributes via el[name] = value doesn't work unless defined
 // - No support for data-* attribute / el.dataset
+// - Element#contains() isn't real
 
 const NODE_TYPES = {
   ELEMENT_NODE: 1,
@@ -297,38 +298,4 @@ function initializeAttributeAccessors(instance, nodeName) {
   }
 }
 
-// -----------------------------------------------------------------------------
-
-// TODO: Extend window with fetch()/AbortController
-
-const window = {
-  Document,
-  DocumentFragment,
-  Node,
-  Text,
-  Element,
-  SVGElement: Element,
-  Event,
-};
-const document = new Document();
-
-window.document = document;
-document.defaultView = window;
-
-for (const key in window) {
-  // Allows statements like "if (el instanceof Node)" as Node is a global
-  global[key] = window[key];
-  document[key] = window[key];
-}
-// There's a convention to detect SSR when "window" isn't set, so don't set it
-global.document = document;
-
-document.documentElement = document.createElement('html');
-document.head = document.createElement('head');
-document.body = document.createElement('body');
-
-document.appendChild(document.documentElement);
-document.documentElement.appendChild(document.head);
-document.documentElement.appendChild(document.body);
-
-export { document };
+export { Node, Text, Element, DocumentFragment, Document, Event };
