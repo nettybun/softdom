@@ -7,7 +7,6 @@ import Koa from 'koa';
 import send from 'koa-send';
 
 // For "client side"
-import { trace } from 'sinuous-trace';
 import fetch from 'node-fetch';
 import AbortController from 'abort-controller';
 
@@ -24,13 +23,13 @@ import {
 } from './softdom.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const serveDir = '../../serve';
-const servePath = filepath => path.join(__dirname, serveDir, filepath);
+const rootPublicDir = '../../serve';
+const asPublicPath = filepath => path.join(__dirname, rootPublicDir, filepath);
 
 // Server
 const app = new Koa();
 app.use(async (ctx) => {
-  await send(ctx, ctx.path, { root: path.join(__dirname, serveDir) });
+  await send(ctx, ctx.path, { root: path.join(__dirname, rootPublicDir) });
 });
 const server = app.listen(3000);
 console.log('Koa server listening on 3000');
@@ -46,12 +45,9 @@ const window = {
   SVGElement: Element,
   Event,
   AbortController,
-
-  // Properties
-  innerWidth: 1000,
-  innerHeight: 1000,
   // Many properties are hard to support, for instance, window.location isn't a
-  // string, it's a "Location" object. This is intentionally minimal
+  // string, it's a "Location" object. Also "window" isn't defined so using
+  // properties like "window.innerHeight" wouldn't be accessible
 };
 
 // Patch fetch() to be able to wait for all active requests
@@ -71,12 +67,6 @@ window.fetch = (url, ...args) => {
   return req;
 };
 
-// XXX: Bad rabbit hole
-// window.addEventListener = (...args) => console.log('window.addEvent', ...args);
-// window.removeEventListener = (...args) => console.log('window.removeEvent', ...args);
-// window.setInterval = setInterval;
-// window.setTimeout = setTimeout;
-
 const document = new Document();
 window.document = document;
 document.defaultView = window;
@@ -85,7 +75,7 @@ document.defaultView = window;
 for (const key in window) global[key] = window[key];
 
 // XXX: Convention to detect SSR when "window" isn't set, so don't set it
-// global.window = window;
+// XXX: global.window = window;
 global.document = document;
 
 // Create the initial blank DOM
@@ -99,12 +89,11 @@ document.documentElement.appendChild(document.body);
 
 (async () => {
   console.time('Render');
-  await import(servePath('index.js'));
+  await import(asPublicPath('index.js'));
   console.timeEnd('Render');
   await Promise.all(networkRequests);
 
   // General buffer to let things settle. Maybe a necessary evil in SSR
-  // FIXME: Observables aren't updating DOM; api.insert not liking SoftDOM?
   await new Promise((resolve) => setTimeout(resolve, 500));
   server.close();
   console.log('Koa server stopped');
@@ -120,9 +109,9 @@ document.documentElement.appendChild(document.body);
   });
   console.timeEnd('Serialize');
 
-  const inPath = servePath('index.html');
+  const inPath = asPublicPath('index.html');
   const indexHTML = await fs.readFile(inPath, 'utf-8');
-  const outPath = servePath('indexSSR.html');
+  const outPath = asPublicPath('indexSSR.html');
   await fs.writeFile(outPath, indexHTML.replace(/[ ]*<!--SSR-->/, serialized));
 
   console.log('Written to:', outPath);

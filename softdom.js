@@ -154,6 +154,14 @@ class Text extends Node {
   get textContent() {
     return this.nodeValue;
   }
+  // This field actually comes from the abstract CharacterData type
+  // It's used by Sinuous for observable updates to the DOM
+  set data(text) {
+    this.nodeValue = text;
+  }
+  get data() {
+    return this.nodeValue;
+  }
 }
 
 class Element extends Node {
