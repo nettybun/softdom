@@ -316,6 +316,7 @@ const elementAttributes = {
   img: ['src'],
   label: ['htmlFor'],
   input: ['type', 'placeholder'],
+  button: ['type'],
 };
 function initializeAttributeAccessors(instance, nodeName) {
   const attributes = elementAttributes[nodeName.toLowerCase()] ?? [];
