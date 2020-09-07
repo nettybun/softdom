@@ -169,6 +169,11 @@ class Element extends Node {
     this.__handlers = {};
     this.style = {};
     this.namespace = null;
+
+    // Sinuous-specific unfortunately...
+    // Naturally el._listeners = {} but minified. Ugh.
+    this.t = {};
+
     initializeAttributeAccessors(this, nodeName);
     if (sealLock === 'Element') {
       Object.seal(this);
