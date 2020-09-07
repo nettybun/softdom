@@ -1,20 +1,10 @@
 {
-  "name": "ssr",
+  "name": "softdom",
   "version": "1.0.0",
-  "description": "Render a DOM-based JS script (ESM) and serialize",
-  "main": "render.js",
+  "description": "Tiny DOM renderer and serializer for ESM web applications",
+  "main": "softdom.js",
   "type": "module",
-  "scripts": {
-    "build": "node --unhandled-rejections=strict --experimental-loader ./web-root-loader.mjs render.js"
-  },
   "keywords": [],
   "author": "Gen Hames",
-  "license": "MIT",
-  "dependencies": {
-    "abort-controller": "^3.0.0",
-    "koa": "^2.13.0",
-    "koa-send": "^5.0.0",
-    "node-fetch": "^2.6.0",
-    "xml-formatter": "^2.1.2"
-  }
+  "license": "MIT"
 }

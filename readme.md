@@ -3,8 +3,11 @@
 DOM in Node that's pretty lightweight. Written so you can understand all of the
 code in only a few minutes.
 
-It's hardcoded for Stayknit right now but it should hopefully be clear how to
-port it to your application. The history of `render.js` will show more simple
-setups without a webserver+`fetch()`.
+Hopefully it's clear how to port it to your application.
 
-Note that `typeof window === undefined` as per SSR convention.
+Notes:
+  - `typeof window === undefined` as per SSR convention.
+  - DocumentFragment doesn't handle moving children properly on insertBefore
+  - Setting attributes via el[name] = value doesn't work unless defined
+  - No support for data-* attribute / el.dataset
+  - Element#contains() isn't real, along with many other complex methods...

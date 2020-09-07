@@ -1,12 +1,6 @@
 // Adapted from UnDOM (minimal DOM) and Domino (spec compliant DOM)
 // They're amazing projects
 
-// Missing things:
-// - DocumentFragment doesn't handle moving children properly on insertBefore
-// - Setting attributes via el[name] = value doesn't work unless defined
-// - No support for data-* attribute / el.dataset
-// - Element#contains() isn't real
-
 const NODE_TYPES = {
   ELEMENT_NODE: 1,
   ATTRIBUTE_NODE: 2,
@@ -77,13 +71,23 @@ const escapeMap = {
 const encodeAttribute = a => ` ${a.name}="${encodeTextSafe(a.value)}"`;
 const encodeTextSafe = s => s.replace(/[&<>'"]/g, m => escapeMap[m]);
 
+// To throw errors on property read/write the object is sealed. However, this
+// needs to happen at the top of the super() chain.
+let sealLock = '';
+
 class Node {
   constructor(nodeType, nodeName) {
+    if (!sealLock) sealLock = 'Node';
     this.nodeType = nodeType;
     this.nodeName = nodeName;
     this.childNodes = [];
+    this.parentNode = null;
     // This isn't in the spec but I use it a bit. This implementation is wrong
     this.dataset = {};
+    if (sealLock === 'Node') {
+      Object.seal(this);
+      sealLock = '';
+    }
   }
   get nextSibling() {
     let p = this.parentNode;
@@ -137,42 +141,40 @@ class Node {
   remove() {
     if (this.parentNode) this.parentNode.removeChild(this);
   }
-  // TODO: Support this?
-  contains() {
-    return false;
-  }
 }
 
 class Text extends Node {
   constructor(text) {
+    if (!sealLock) sealLock = 'Text';
     super(NODE_TYPES.TEXT_NODE, '#text');
     this.nodeValue = text;
+    if (sealLock === 'Text') {
+      Object.seal(this);
+      sealLock = '';
+    }
   }
-  set textContent(text) {
-    this.nodeValue = text;
-  }
-  get textContent() {
-    return this.nodeValue;
-  }
-  // This field actually comes from the abstract CharacterData type
-  // It's used by Sinuous for observable updates to the DOM
-  set data(text) {
-    this.nodeValue = text;
-  }
-  get data() {
-    return this.nodeValue;
-  }
+  set textContent(text) { this.nodeValue = text; }
+  get textContent() { return this.nodeValue; }
+
+  // From abstract CharacterData type but is used by Sinuous for api.insert()
+  set data(text) { this.nodeValue = text; }
+  get data() { return this.nodeValue; }
 }
 
 class Element extends Node {
   constructor(nodeType, nodeName) {
+    if (!sealLock) sealLock = 'Element';
     super(nodeType || NODE_TYPES.ELEMENT_NODE, nodeName);
     this.attributes = [];
     this.__handlers = {};
     this.style = {};
+    this.namespace = null;
     initializeAttributeAccessors(this, nodeName);
+    if (sealLock === 'Element') {
+      Object.seal(this);
+      sealLock = '';
+    }
   }
-
   get tagName() { return this.nodeName; }
 
   get id() { return this.getAttribute('id'); }
@@ -188,7 +190,6 @@ class Element extends Node {
     return this.childNodes.filter(node =>
       node.nodeType === NODE_TYPES.ELEMENT_NODE);
   }
-
   setAttribute(key, value) {
     this.setAttributeNS(null, key, value);
   }
@@ -198,7 +199,6 @@ class Element extends Node {
   removeAttribute(key) {
     this.removeAttributeNS(null, key);
   }
-
   setAttributeNS(ns, name, value) {
     let attr = findWhere(this.attributes, createAttributeFilter(ns, name), false, false);
     if (!attr) this.attributes.push(attr = { ns, name });
@@ -211,7 +211,6 @@ class Element extends Node {
   removeAttributeNS(ns, name) {
     splice(this.attributes, createAttributeFilter(ns, name), false, false);
   }
-
   addEventListener(type, handler) {
     (this.__handlers[toLower(type)] || (this.__handlers[toLower(type)] = [])).push(handler);
   }
@@ -244,29 +243,39 @@ class Element extends Node {
 
 class DocumentFragment extends Node {
   constructor() {
+    if (!sealLock) sealLock = 'DocumentFragment';
     super(NODE_TYPES.DOCUMENT_FRAGMENT_NODE, '#document-fragment');
+    if (sealLock === 'DocumentFragment') {
+      Object.seal(this);
+      sealLock = '';
+    }
   }
 }
 
 class Document extends Element {
   constructor() {
+    if (!sealLock) sealLock = 'Document';
     super(NODE_TYPES.DOCUMENT_NODE, '#document');
+    this.defaultView = null;
+    this.documentElement = null;
+    this.head = null;
+    this.body = null;
+    if (sealLock === 'Document') {
+      Object.seal(this);
+      sealLock = '';
+    }
   }
-
   createElement(type) {
     return new Element(null, String(type).toUpperCase());
   }
-
   createElementNS(ns, type) {
     let element = this.createElement(type);
     element.namespace = ns;
     return element;
   }
-
   createTextNode(text) {
     return new Text(text);
   }
-
   createDocumentFragment() {
     return new DocumentFragment();
   }
@@ -274,9 +283,14 @@ class Document extends Element {
 
 class Event {
   constructor(type, opts) {
+    if (!sealLock) sealLock = 'Event';
     this.type = type;
     this.bubbles = Boolean(opts && opts.bubbles);
     this.cancelable = Boolean(opts && opts.cancelable);
+    if (sealLock === 'Event') {
+      Object.seal(this);
+      sealLock = '';
+    }
   }
   stopPropagation() {
     this._stop = true;

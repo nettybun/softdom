@@ -1,0 +1,20 @@
+{
+  "name": "softdom-example-webserver",
+  "version": "0.0.0",
+  "main": "render.js",
+  "type": "module",
+  "scripts": {
+    "build": "node --unhandled-rejections=strict --experimental-loader ../web-root-loader.mjs index.js"
+  },
+  "keywords": [],
+  "author": "Gen Hames",
+  "license": "MIT",
+  "dependencies": {
+    "abort-controller": "^3.0.0",
+    "koa": "^2.13.0",
+    "koa-send": "^5.0.0",
+    "node-fetch": "^2.6.0",
+    "softdom": "..",
+    "xml-formatter": "^2.1.2"
+  }
+}
