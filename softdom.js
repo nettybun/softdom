@@ -314,6 +314,8 @@ class Event {
 const elementAttributes = {
   a: ['href'],
   img: ['src'],
+  label: ['htmlFor'],
+  input: ['type', 'placeholder'],
 };
 function initializeAttributeAccessors(instance, nodeName) {
   const attributes = elementAttributes[nodeName.toLowerCase()] ?? [];
