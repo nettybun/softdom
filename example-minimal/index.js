@@ -10,9 +10,11 @@ import {
   Event
 } from 'softdom';
 
+const ROOT_DIR = '../public';
+
+// @ts-ignore TS module is ESNext...
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const rootPublicDir = '../public';
-const asPublicPath = filepath => path.join(__dirname, rootPublicDir, filepath);
+const asPublicPath = filepath => path.join(__dirname, ROOT_DIR, filepath);
 
 const window = {
   // Constructors
@@ -33,11 +35,8 @@ window.document = document;
 document.defaultView = window;
 
 // Allows statements like "if (el instanceof Node)" as Node is a global
+// Note "window" isn't global so "typeof window === undefined" checking works
 for (const key in window) global[key] = window[key];
-
-// XXX: Convention to detect SSR when "window" isn't set, so don't set it
-// XXX: global.window = window;
-global.document = document;
 
 // Create the initial blank DOM
 document.documentElement = document.createElement('html');

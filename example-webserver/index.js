@@ -22,17 +22,20 @@ import {
   Event
 } from 'softdom';
 
+const ROOT_DIR = '../public';
+const SERVER_PORT = 3000;
+
+// @ts-ignore TS module is ESNext...
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const rootPublicDir = '../public';
-const asPublicPath = filepath => path.join(__dirname, rootPublicDir, filepath);
+const asPublicPath = filepath => path.join(__dirname, ROOT_DIR, filepath);
 
 // Server
 const app = new Koa();
 app.use(async (ctx) => {
-  await send(ctx, ctx.path, { root: path.join(__dirname, rootPublicDir) });
+  await send(ctx, ctx.path, { root: path.join(__dirname, ROOT_DIR) });
 });
-const server = app.listen(3000);
-console.log('Koa server listening on 3000');
+const server = app.listen(SERVER_PORT);
+console.log(`Koa server listening on ${SERVER_PORT}`);
 
 // Client
 const window = {
@@ -56,7 +59,7 @@ const networkRequests = [];
 window.fetch = (url, ...args) => {
   // Convert relative and absolute paths to full URLs needed by node-fetch
   if (!url.match(/^https?:\/\//)) {
-    url = new URL(`http://localhost:3000/${url}`).toString();
+    url = new URL(`http://localhost:${SERVER_PORT}/${url}`).toString();
   }
   const reqStart = Date.now();
   const req = fetch(url, ...args);
@@ -72,11 +75,8 @@ window.document = document;
 document.defaultView = window;
 
 // Allows statements like "if (el instanceof Node)" as Node is a global
+// Note "window" isn't global so "typeof window === undefined" checking works
 for (const key in window) global[key] = window[key];
-
-// XXX: Convention to detect SSR when "window" isn't set, so don't set it
-// XXX: global.window = window;
-global.document = document;
 
 // Create the initial blank DOM
 document.documentElement = document.createElement('html');

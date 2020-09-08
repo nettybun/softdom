@@ -2,6 +2,7 @@
 // You only need this if you're using Snowpack
 import path from 'path';
 
+// @ts-ignore
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export function resolve(specifier, context, defaultResolve) {
