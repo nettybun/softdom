@@ -16,7 +16,8 @@ document.body.appendChild(element);
 fetch('data.txt')
   .then(data => data.text())
   .then(text => {
-    const element = document.createElement('p');
-    element.appendChild(document.createTextNode(text.trim()));
-    document.body.appendChild(element);
+    const a = document.createElement('a');
+    a.href = `http://localhost/${text.trim().replace(/ /g, '-').toLowerCase()}`;
+    a.appendChild(document.createTextNode(text.trim()));
+    document.body.appendChild(a);
   });

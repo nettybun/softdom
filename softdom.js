@@ -73,21 +73,16 @@ const encodeTextSafe = s => s.replace(/[&<>'"]/g, m => escapeMap[m]);
 
 // To throw errors on property read/write the object is sealed. However, this
 // needs to happen at the top of the super() chain.
-let sealLock = '';
+let preventInstanceObjectSeal = false;
 
 class Node {
   constructor(nodeType, nodeName) {
-    if (!sealLock) sealLock = 'Node';
     this.nodeType = nodeType;
     this.nodeName = nodeName;
     this.childNodes = [];
     this.parentNode = null;
-    // This isn't in the spec but I use it a bit. This implementation is wrong
-    this.dataset = {};
-    if (sealLock === 'Node') {
-      Object.seal(this);
-      sealLock = '';
-    }
+    Object.assign(this, classProperties.Node);
+    if (!preventInstanceObjectSeal) Object.seal(this);
   }
   get nextSibling() {
     let p = this.parentNode;
@@ -145,13 +140,14 @@ class Node {
 
 class Text extends Node {
   constructor(text) {
-    if (!sealLock) sealLock = 'Text';
+    const prev = preventInstanceObjectSeal;
+    preventInstanceObjectSeal = true;
     super(NODE_TYPES.TEXT_NODE, '#text');
+    preventInstanceObjectSeal = prev;
+
     this.nodeValue = text;
-    if (sealLock === 'Text') {
-      Object.seal(this);
-      sealLock = '';
-    }
+    Object.assign(this, classProperties.Text);
+    if (!preventInstanceObjectSeal) Object.seal(this);
   }
   set textContent(text) { this.nodeValue = text; }
   get textContent() { return this.nodeValue; }
@@ -163,22 +159,16 @@ class Text extends Node {
 
 class Element extends Node {
   constructor(nodeType, nodeName) {
-    if (!sealLock) sealLock = 'Element';
+    const prev = preventInstanceObjectSeal;
+    preventInstanceObjectSeal = true;
     super(nodeType || NODE_TYPES.ELEMENT_NODE, nodeName);
+    preventInstanceObjectSeal = prev;
     this.attributes = [];
     this.__handlers = {};
-    this.style = {};
     this.namespace = null;
-
-    // Sinuous-specific unfortunately...
-    // Naturally el._listeners = {} but minified. Ugh.
-    this.t = {};
-
-    initializeAttributeAccessors(this, nodeName);
-    if (sealLock === 'Element') {
-      Object.seal(this);
-      sealLock = '';
-    }
+    Object.assign(this, classProperties.Element);
+    initializeAttributes(this, nodeName);
+    if (!preventInstanceObjectSeal) Object.seal(this);
   }
   get tagName() { return this.nodeName; }
 
@@ -237,7 +227,6 @@ class Element extends Node {
     } while (event.bubbles && !(c && event._stop) && (t = t.parentNode));
     return Boolean(l);
   }
-
   get outerHTML() {
     return serialize(this);
   }
@@ -248,27 +237,26 @@ class Element extends Node {
 
 class DocumentFragment extends Node {
   constructor() {
-    if (!sealLock) sealLock = 'DocumentFragment';
+    const prev = preventInstanceObjectSeal;
+    preventInstanceObjectSeal = true;
     super(NODE_TYPES.DOCUMENT_FRAGMENT_NODE, '#document-fragment');
-    if (sealLock === 'DocumentFragment') {
-      Object.seal(this);
-      sealLock = '';
-    }
+    preventInstanceObjectSeal = prev;
+    if (!preventInstanceObjectSeal) Object.seal(this);
   }
 }
 
 class Document extends Element {
   constructor() {
-    if (!sealLock) sealLock = 'Document';
+    const prev = preventInstanceObjectSeal;
+    preventInstanceObjectSeal = true;
     super(NODE_TYPES.DOCUMENT_NODE, '#document');
+    preventInstanceObjectSeal = prev;
     this.defaultView = null;
     this.documentElement = null;
     this.head = null;
     this.body = null;
-    if (sealLock === 'Document') {
-      Object.seal(this);
-      sealLock = '';
-    }
+    Object.assign(this, classProperties.Document);
+    if (!preventInstanceObjectSeal) Object.seal(this);
   }
   createElement(type) {
     return new Element(null, String(type).toUpperCase());
@@ -288,14 +276,11 @@ class Document extends Element {
 
 class Event {
   constructor(type, opts) {
-    if (!sealLock) sealLock = 'Event';
     this.type = type;
     this.bubbles = Boolean(opts && opts.bubbles);
     this.cancelable = Boolean(opts && opts.cancelable);
-    if (sealLock === 'Event') {
-      Object.seal(this);
-      sealLock = '';
-    }
+    Object.assign(this, classProperties.Event);
+    if (!preventInstanceObjectSeal) Object.seal(this);
   }
   stopPropagation() {
     this._stop = true;
@@ -315,10 +300,10 @@ const elementAttributes = {
   a: ['href'],
   img: ['src'],
   label: ['htmlFor'],
-  input: ['type', 'placeholder'],
-  button: ['type'],
+  input: ['type', 'value', 'placeholder'],
+  button: ['type', 'value'],
 };
-function initializeAttributeAccessors(instance, nodeName) {
+function initializeAttributes(instance, nodeName) {
   const attributes = elementAttributes[nodeName.toLowerCase()] ?? [];
   for (const attr of attributes) {
     Object.defineProperty(instance, attr, {
@@ -328,4 +313,15 @@ function initializeAttributeAccessors(instance, nodeName) {
   }
 }
 
+// Allow people to add properties to classes before their instance is sealed
+const classProperties = {
+  Node: {},
+  Text: {},
+  Element: {},
+  DocumentFragment: {},
+  Document: {},
+  Event: {},
+}
+
 export { Node, Text, Element, DocumentFragment, Document, Event };
+export { classProperties, elementAttributes, preventInstanceObjectSeal }
