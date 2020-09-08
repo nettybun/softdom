@@ -9,8 +9,8 @@ Hopefully it's clear how to port it to your application.
   - DocumentFragment doesn't handle moving children properly on insertBefore
   - If not already defined, setting `el[name] = value` doesn't work. **_This is
     a feature_** to save you from bugs.
-  - Complex structues like data-* attributes, el.contains(), el.innerText, and
-    others are left to you to implement (if you need to) - read below
+  - Complex parts (i.e data-* attributes, el.contains(), el.innerText, etc) are
+    left to implement if you need them - read below
   - Any browser magic like `<button>` defaulting to `type="submit"` isn't
     implemented, so be careful. [Read Domino for ideas/implementations][1]
 
