@@ -5,10 +5,9 @@ code in only a few minutes.
 
 Hopefully it's clear how to port it to your application.
 
-  - `typeof window === undefined` as per SSR convention.
-  - DocumentFragment doesn't handle moving children properly on insertBefore
-  - If not already defined, setting `el[name] = value` doesn't work. **_This is
-    a feature_** to save you from bugs.
+  - `typeof window === "undefined"` as per SSR convention.
+  - If not already defined, setting `el[name] = value` throws due to
+    `Object.seal()` **_This is a feature_** to save you from bugs.
   - Complex parts (i.e data-* attributes, el.contains(), el.innerText, etc) are
     left to implement if you need them - read below
   - Any browser magic like `<button>` defaulting to `type="submit"` isn't
