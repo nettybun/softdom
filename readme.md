@@ -34,7 +34,7 @@ Written to: /home/today/_/work/softdom/public/indexSSR.html
 For an example of a full web application written in Sinuous/JSX/TS that uses SSR
 see https://gitlab.com/nthm/stayknit, specifically [its ssr/ folder][2].
 
-## Implementation notes
+## Implementation notes with `Object.seal()`
 
 SoftDOM uses `Object.seal()` to throw errors when your web app tries to write
 properties that don't exist, i.e `el.innerText = 'Text!'` will throw (read
@@ -49,6 +49,41 @@ You know your tradeoffs best. Aliasing `innerText = this.textContent` might be
 all you need. The W3C spec would explain how to write something more complex.
 
 Don't be scared to hack at the code ✨✨
+
+## API
+
+At the end of SoftDOM's code you'll see:
+
+```js
+export { Node, Text, Element, DocumentFragment, Document, Event };
+export { classProperties, elementAttributes, preventInstanceObjectSeal }
+```
+
+The first line is DOM objects, as expected.
+
+The second line is to tweak SoftDOM's use of `Object.seal()` to workaround
+errors. When you first run your app it'll likely crash when your framework/code
+writes to a property or attribute that isn't defined. For example, "href" isn't
+defined on `Element`, so it would throw on `<a href=...>` if not for
+`elementAttributes` having `a: ["href"]` written. The provided object is very
+minimal; you should add to it.
+
+Similarly to get the Sinuous framework to work I needed to add to the `Element`
+class by extending `classProperties` ([sourcecode][2]):
+
+```js
+// Need to patch `Element` for Sinuous
+Object.assign(classProperties.Element, {
+  // Naturally el._listeners = {} but minified. Ugh.
+  t: {},
+  // Otherwise throws: Cannot set property of 'cssText' of undefined
+  style: {},
+  // This isn't implemented in SoftDOM but I write to it in sinuous-trace/log
+  dataset: {},
+  // This isn't implemented in SoftDOM but I write to it in sinuous-trace/log
+  contains() { return true; },
+});
+```
 
 [1]: https://github.com/fgnass/domino/blob/master/lib/htmlelts.js#L342
 [2]: https://gitlab.com/nthm/stayknit/tree/work/ssr
